@@ -2,6 +2,7 @@ from flask import Flask, request, g
 from flask_cors import CORS
 
 from auth import gauth_login, authorization_required, admin_only
+from events import new_event
 
 from dotenv import load_dotenv
 
@@ -20,4 +21,11 @@ def google_login():
 @admin_only
 def create_event():
     payload = request.json
-    return {'success': True}
+    try:
+        return new_event(payload)
+    except Exception:
+        return {
+            'success': False,
+            'error': 'Unknown Error',
+            'friendly': 'No idea what went wrong, might be a Google OAuth Delegation token issue...'
+        }
