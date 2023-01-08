@@ -4,7 +4,7 @@ from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 
-from oauth_setup import SCOPES
+SCOPES = ['https://www.googleapis.com/auth/calendar']
 
 def _get_gapi_credential() -> Credentials:
     creds = None
