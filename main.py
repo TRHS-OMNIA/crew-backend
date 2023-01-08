@@ -12,7 +12,8 @@ from events import (
     get_limit_entries,
     get_event_dashboard,
     instant_check_in,
-    instant_check_out
+    instant_check_out,
+    edit_entry
     )
 
 
@@ -96,3 +97,10 @@ def check_in(event_id, user_id):
 @admin_only
 def check_out(event_id, user_id):
     return instant_check_out(event_id, user_id)
+
+@app.post('/event/<event_id>/user/<user_id>')
+@authorization_required
+@admin_only
+def dashboard_edit(event_id, user_id):
+    payload = request.json
+    return edit_entry(event_id, user_id, payload)

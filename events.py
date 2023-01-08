@@ -1,6 +1,7 @@
 import os
 import secrets
 import datetime
+from typing import Dict
 
 from dateutil.parser import parse
 import pytz
@@ -222,6 +223,7 @@ def get_event_dashboard(event_id):
         'success': True,
         'eventData': event_data,
         'entries': entries,
+        'eventLimits': get_event_limits(event_data_row, entries)
     }
 
 def instant_check_in(event_id, user_id):
@@ -252,4 +254,39 @@ def instant_check_out(event_id, user_id):
     return {
         'success': True,
         'check_out': now
+    }
+
+def _unwrap_time_input(ts: str) -> Dict[str, int]:
+    h, m = ts.split(':')
+    return {
+        'hour': int(h),
+        'minute': int(m)
+    }
+
+def edit_entry(event_id, user_id, payload):
+    cin = None
+    cout = None
+    if payload['check_in'] or payload['check_out']:
+        row = get_event_row(event_id)
+        base_date = localize_time(row['start'])
+        if payload['check_in']:
+            cin = base_date.replace(**_unwrap_time_input(payload['check_in'])).astimezone(pytz.utc)
+        if payload['check_out']:
+            cout = base_date.replace(**_unwrap_time_input(payload['check_out'])).astimezone(pytz.utc)
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'UPDATE public.entries SET check_in = %s, check_out = %s, position = %s, private_note = %s WHERE uid = %s AND eid = %s',
+            (cin, cout, payload['role'], payload['private_note'], user_id, event_id)
+        )
+        conn.commit()
+    conn.close()
+    return {
+        'success': True,
+        'edits': {
+            'check_in': cin,
+            'check_out': cout,
+            'position': payload['role'],
+            'private_note': payload['private_note']
+        }
     }
