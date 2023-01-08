@@ -104,5 +104,15 @@ def admin_only(f):
         return f(*args, **kwargs)
     return wrap
 
+def inject_user(f):
+    @wraps(f)
+    def wrap(*args, **kwargs):
+        try:
+            g.user = validate_auth_token(request.headers["authorization"])
+        except Exception:
+            g.user = None
+        return f(*args, **kwargs)
+    return wrap
+
 if __name__ == '__main__':
     print(create_auth_token('dfllanagan'))
