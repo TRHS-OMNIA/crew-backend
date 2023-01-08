@@ -2,7 +2,19 @@ from flask import Flask, request, g
 from flask_cors import CORS
 
 from auth import gauth_login, authorization_required, admin_only, inject_user
-from events import new_event, get_event_row, get_event_data, get_event_limits, join_event, get_user_event_limits, get_limit_entries
+from events import (
+    new_event, 
+    get_event_row, 
+    get_event_data, 
+    get_event_limits, 
+    join_event, 
+    get_user_event_limits, 
+    get_limit_entries,
+    get_event_dashboard,
+    instant_check_in,
+    instant_check_out
+    )
+
 
 from dotenv import load_dotenv
 
@@ -66,3 +78,21 @@ def get_event(event_id):
 def user_join_event():
     payload = request.json
     return join_event(payload['eventId'], g.user)
+
+@app.get('/event/<event_id>/dashboard')
+@authorization_required
+@admin_only
+def populate_event_dashboard(event_id):
+    return get_event_dashboard(event_id)
+
+@app.get('/event/<event_id>/user/<user_id>/checkin')
+@authorization_required
+@admin_only
+def check_in(event_id, user_id):
+    return instant_check_in(event_id, user_id)
+
+@app.get('/event/<event_id>/user/<user_id>/checkout')
+@authorization_required
+@admin_only
+def check_out(event_id, user_id):
+    return instant_check_out(event_id, user_id)

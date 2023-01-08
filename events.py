@@ -206,3 +206,50 @@ def join_event(event_id, user):
             'error': 'Failed to Join Event',
             'friendly': 'Unable to verify your elgibility to join this event: ' + user_event_limits['user_justification']
         }
+
+def get_event_dashboard(event_id):
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute('SELECT * FROM public.events WHERE id = %s', (event_id, ))
+        event_data_row = cur.fetchone()
+        event_data = get_event_data(event_data_row)
+        cur.execute(
+            'SELECT * FROM public.entries JOIN public.users ON uid = id WHERE eid = %s', 
+            (event_id, ))
+        entries = cur.fetchall()
+    conn.close()
+    return {
+        'success': True,
+        'eventData': event_data,
+        'entries': entries,
+    }
+
+def instant_check_in(event_id, user_id):
+    now = datetime.datetime.now(pytz.utc)
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'UPDATE public.entries SET check_in = %s WHERE eid = %s AND uid = %s',
+            (now, event_id, user_id)
+        )
+        conn.commit()
+    conn.close()
+    return {
+        'success': True,
+        'check_in': now
+    }
+
+def instant_check_out(event_id, user_id):
+    now = datetime.datetime.now(pytz.utc)
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'UPDATE public.entries SET check_out = %s WHERE eid = %s AND uid = %s',
+            (now, event_id, user_id)
+        )
+        conn.commit()
+    conn.close()
+    return {
+        'success': True,
+        'check_out': now
+    }
