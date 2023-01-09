@@ -1,3 +1,7 @@
+from dotenv import load_dotenv
+
+load_dotenv()
+
 from flask import Flask, request, g
 from flask_cors import CORS
 
