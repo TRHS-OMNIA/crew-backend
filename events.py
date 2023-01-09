@@ -290,3 +290,56 @@ def edit_entry(event_id, user_id, payload):
             'private_note': payload['private_note']
         }
     }
+
+def _get_today() -> datetime.datetime:
+    return datetime.datetime.now().astimezone(PACIFIC_TIME).replace(hour=0, minute=0)
+
+def _get_upcoming_events():
+    today = _get_today()
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT * FROM public.events WHERE start > %s ORDER BY start ASC',
+            (today, )
+        )
+        events = cur.fetchall()
+    conn.close()
+    return events
+
+def _get_previous_events():
+    today = _get_today()
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT * FROM public.events WHERE start < %s ORDER BY start DESC',
+            (today, )
+        )
+        events = cur.fetchall()
+    conn.close()
+    return events
+
+def _get_id_event_data(row):
+    ret = get_event_data(row)
+    ret['id'] = row['id']
+    return ret
+
+def upcoming():
+    rows = _get_upcoming_events()
+    ret = []
+    for row in rows:
+        ret.append(_get_id_event_data(row))
+    return ret
+
+def previous():
+    rows = _get_previous_events()
+    ret = []
+    for row in rows:
+        ret.append(_get_id_event_data(row))
+    return ret
+
+def list_events():
+    return {
+        'success': True,
+        'upcoming': upcoming(),
+        'previous': previous()
+    }

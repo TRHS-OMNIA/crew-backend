@@ -13,7 +13,7 @@ from events import (
     get_event_dashboard,
     instant_check_in,
     instant_check_out,
-    edit_entry
+    edit_entry, list_events
     )
 
 
@@ -104,3 +104,7 @@ def check_out(event_id, user_id):
 def dashboard_edit(event_id, user_id):
     payload = request.json
     return edit_entry(event_id, user_id, payload)
+
+@app.get('/events')
+def get_event_lists():
+    return list_events()
