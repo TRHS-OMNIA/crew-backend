@@ -180,7 +180,6 @@ def _remove_email_from_gcal(event_id, email):
         event['attendees'] = replacement
     calendar_api.events().update(calendarId=CALENDAR_ID, eventId=event_id, body=event, sendUpdates='all').execute()
 
-
 def join_event(event_id, user):
     row = get_event_row(event_id)
     entries = get_limit_entries(event_id)
@@ -294,6 +293,9 @@ def edit_entry(event_id, user_id, payload):
 def _get_today() -> datetime.datetime:
     return datetime.datetime.now().astimezone(PACIFIC_TIME).replace(hour=0, minute=0)
 
+def _get_tomorrow() -> datetime.datetime:
+    return _get_today() + datetime.timedelta(days=1)
+
 def _get_upcoming_events():
     today = _get_today()
     conn = get_db_connection()
@@ -323,6 +325,15 @@ def _get_id_event_data(row):
     ret['id'] = row['id']
     return ret
 
+def _get_user_event_data(row):
+    data = get_event_data(row)
+    data['event_id'] = row['eid']
+    data['check_in'] = row['check_in']
+    data['check_out'] = row['check_out']
+    data['position'] = row['position']
+    data['start'] = row['start']
+    return data
+
 def upcoming():
     rows = _get_upcoming_events()
     ret = []
@@ -342,4 +353,88 @@ def list_events():
         'success': True,
         'upcoming': upcoming(),
         'previous': previous()
+    }
+
+def _get_upcoming_user_events(user_id):
+    tomorrow = _get_tomorrow()
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT eid, title, start, "end", position, check_in, check_out FROM public.entries JOIN public.events ON eid = id WHERE uid = %s AND start > %s ORDER BY start ASC',
+            (user_id, tomorrow)
+        )
+        events = cur.fetchall()
+    conn.close()
+    return events
+
+def _get_previous_user_events(user_id):
+    today = _get_today()
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT eid, title, start, "end", position, check_in, check_out FROM public.entries JOIN public.events ON eid = id WHERE uid = %s AND start < %s ORDER BY start DESC',
+            (user_id, today)
+        )
+        events = cur.fetchall()
+    conn.close()
+    return events
+
+def _get_today_user_events(user_id):
+    tomorrow = _get_tomorrow()
+    today = _get_today()
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT eid, title, start, "end", position, check_in, check_out FROM public.entries JOIN public.events ON eid = id WHERE uid = %s AND start > %s AND start < %s ORDER BY start ASC',
+            (user_id, today, tomorrow)
+        )
+        events = cur.fetchall()
+    conn.close()
+    return events
+
+def user_upcoming(user_id):
+    rows = _get_upcoming_user_events(user_id)
+    ret = []
+    for row in rows:
+        data = _get_user_event_data(row)
+        ret.append(data)
+    return ret
+
+def user_previous(user_id):
+    rows = _get_previous_user_events(user_id)
+    ret = []
+    for row in rows:
+        data = _get_user_event_data(row)
+        ret.append(data)
+    return ret
+
+def user_today(user_id):
+    rows = _get_today_user_events(user_id)
+    ret = []
+    for row in rows:
+        data = _get_user_event_data(row)
+        ret.append(data)
+    return ret
+
+def list_user_events(user_id):
+    return {
+        'success': True,
+        'upcoming': user_upcoming(user_id),
+        'previous': user_previous(user_id),
+        'today': user_today(user_id)
+    }
+
+def get_single_user_event_data(event_id, user_id):
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT eid, title, start, "end", position, check_in, check_out FROM public.entries JOIN public.events ON eid = id WHERE uid = %s AND eid = %s',
+            (user_id, event_id)
+        )
+        row = cur.fetchone()
+    conn.close()
+
+    return {
+        'success': True,
+        'userEventData': _get_user_event_data(row)
     }

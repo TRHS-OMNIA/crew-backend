@@ -13,7 +13,9 @@ from events import (
     get_event_dashboard,
     instant_check_in,
     instant_check_out,
-    edit_entry, list_events
+    edit_entry, list_events,
+    list_user_events,
+    get_single_user_event_data
     )
 
 
@@ -108,3 +110,13 @@ def dashboard_edit(event_id, user_id):
 @app.get('/events')
 def get_event_lists():
     return list_events()
+
+@app.get('/events/user')
+@authorization_required
+def get_user_events():
+    return list_user_events(g.user['id'])
+
+@app.get('/event/<event_id>/user')
+@authorization_required
+def get_single_event_user(event_id):
+    return get_single_user_event_data(event_id, g.user['id'])
