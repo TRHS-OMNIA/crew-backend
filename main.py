@@ -22,6 +22,9 @@ from events import (
     get_single_user_event_data
     )
 
+from qr import (
+    create_qr
+)
 
 from dotenv import load_dotenv
 
@@ -124,3 +127,8 @@ def get_user_events():
 @authorization_required
 def get_single_event_user(event_id):
     return get_single_user_event_data(event_id, g.user['id'])
+
+@app.get('/event/<event_id>/qr')
+@authorization_required
+def generate_checkin_qr(event_id):
+    return create_qr(event_id, g.user['id'])
