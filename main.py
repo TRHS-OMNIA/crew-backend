@@ -23,7 +23,8 @@ from events import (
     )
 
 from qr import (
-    create_qr
+    create_qr,
+    get_data_from_qrid
 )
 
 from dotenv import load_dotenv
@@ -132,3 +133,9 @@ def get_single_event_user(event_id):
 @authorization_required
 def generate_checkin_qr(event_id):
     return create_qr(event_id, g.user['id'])
+
+@app.get('/scan/qr/<qrid>')
+@authorization_required
+@admin_only
+def scan_qr_data(qrid):
+    return get_data_from_qrid(qrid)

@@ -52,3 +52,23 @@ def create_qr(event_id, user_id):
         conn.close()
         return ret
 
+def get_data_from_qrid(qrid):
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT * FROM public.qr JOIN public.entries ON public.qr.eid = public.entries.eid AND public.qr.uid = public.entries.uid JOIN public.users ON public.qr.uid = id JOIN public.events ON public.entries.eid = public.events.id WHERE qrid = %s',
+            (qrid, )
+        )
+        data = cur.fetchone()
+    conn.close()
+    if data:
+        return {
+            'success': True,
+            'data': data
+        }
+    else:
+        return {
+            'success': False,
+            'error': 'Invalid QR',
+            'friendly': 'The check in/out code is invalid.'
+        }
