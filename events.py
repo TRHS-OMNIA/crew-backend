@@ -290,6 +290,20 @@ def edit_entry(event_id, user_id, payload):
         }
     }
 
+def remove_user(event_id, user_id):
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'DELETE FROM public.entries WHERE eid = %s AND uid = %s',
+            (event_id, user_id)
+        )
+        conn.commit()
+    conn.close()
+    _remove_email_from_gcal(event_id, user_id + '@fjuhsd.org')
+    return {
+        'success': True
+    }
+
 def _get_today() -> datetime.datetime:
     return datetime.datetime.now().astimezone(PACIFIC_TIME).replace(hour=0, minute=0)
 

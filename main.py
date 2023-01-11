@@ -19,7 +19,8 @@ from events import (
     instant_check_out,
     edit_entry, list_events,
     list_user_events,
-    get_single_user_event_data
+    get_single_user_event_data,
+    remove_user
     )
 
 from qr import (
@@ -114,6 +115,12 @@ def check_out(event_id, user_id):
 def dashboard_edit(event_id, user_id):
     payload = request.json
     return edit_entry(event_id, user_id, payload)
+
+@app.get('/event/<event_id>/user/<user_id>/remove')
+@authorization_required
+@admin_only
+def delete_user_from_event(event_id, user_id):
+    return remove_user(event_id, user_id)
 
 @app.get('/events')
 def get_event_lists():
