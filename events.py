@@ -311,12 +311,12 @@ def _get_tomorrow() -> datetime.datetime:
     return _get_today() + datetime.timedelta(days=1)
 
 def _get_upcoming_events():
-    today = _get_today()
+    tomorrow = _get_tomorrow()
     conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute(
             'SELECT * FROM public.events WHERE start > %s ORDER BY start ASC',
-            (today, )
+            (tomorrow, )
         )
         events = cur.fetchall()
     conn.close()
@@ -329,6 +329,19 @@ def _get_previous_events():
         cur.execute(
             'SELECT * FROM public.events WHERE start < %s ORDER BY start DESC',
             (today, )
+        )
+        events = cur.fetchall()
+    conn.close()
+    return events
+
+def _get_today_events():
+    today = _get_today()
+    tomorrow = _get_tomorrow()
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT * FROM public.events WHERE start > %s AND start < %s ORDER BY start ASC',
+            (today, tomorrow)
         )
         events = cur.fetchall()
     conn.close()
@@ -362,11 +375,19 @@ def previous():
         ret.append(_get_id_event_data(row))
     return ret
 
+def today():
+    rows = _get_today_events()
+    ret = []
+    for row in rows:
+        ret.append(_get_id_event_data(row))
+    return ret
+
 def list_events():
     return {
         'success': True,
         'upcoming': upcoming(),
-        'previous': previous()
+        'previous': previous(),
+        'today': today()
     }
 
 def _get_upcoming_user_events(user_id):
