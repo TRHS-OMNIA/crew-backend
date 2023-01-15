@@ -20,7 +20,9 @@ from events import (
     edit_entry, list_events,
     list_user_events,
     get_single_user_event_data,
-    remove_user
+    remove_user,
+    _get_event_for_edit,
+    edit_event
     )
 
 from qr import (
@@ -146,3 +148,16 @@ def generate_checkin_qr(event_id):
 @admin_only
 def scan_qr_data(qrid):
     return get_data_from_qrid(qrid)
+
+@app.get('/event/<event_id>/edit')
+@authorization_required
+@admin_only
+def get_editable_event(event_id):
+    return _get_event_for_edit(event_id)
+
+@app.post('/event/<event_id>/edit')
+@authorization_required
+@admin_only
+def edit_existing_event(event_id):
+    payload = request.json
+    return edit_event(event_id, payload)

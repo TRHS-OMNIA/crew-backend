@@ -84,6 +84,35 @@ def new_event(payload):
         'id': eventId
     }
 
+def edit_event(event_id, payload):
+    calendar_api = get_calendar_api()
+    event = {
+        'title': payload['eventTitle'],
+        'start': globalize_time_str(payload['date'] + ' ' + payload['startTime']),
+        'end': globalize_time_str(payload['date'] + ' ' + payload['endTime']),
+        'limit': _normalize_limit(payload['limit']),
+        'reserved': _normalize_limit(payload['reserved']),
+        'id': event_id
+    }
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'UPDATE public.events SET title = %s, start = %s, "end" = %s, "limit" = %s, "reserved" = %s WHERE id = %s',
+            (event['title'], event['start'], event['end'], event['limit'], event['reserved'], event['id'])
+        )
+        conn.commit()
+    conn.close()
+
+    google_event = calendar_api.events().get(calendarId=CALENDAR_ID, eventId=event_id).execute()
+    google_event['summary'] = event['title']
+    google_event['start']['dateTime'] = event['start'].isoformat()
+    google_event['end']['dateTime'] = event['end'].isoformat()
+    calendar_api.events().update(calendarId=CALENDAR_ID, eventId=event_id, body=google_event, sendUpdates='all').execute()
+
+    return {
+        'success': True
+    }
+
 def get_event_row(event_id):
     conn = get_db_connection()
     with conn.cursor() as cur:
@@ -472,4 +501,25 @@ def get_single_user_event_data(event_id, user_id):
     return {
         'success': True,
         'userEventData': _get_user_event_data(row)
+    }
+
+def _get_event_for_edit(event_id):
+    row = get_event_row(event_id)
+    date = localize_time(row['start']).strftime('%m/%d/%Y')
+    start_time = localize_time(row['start']).strftime('%H:%M')
+    end_time = localize_time(row['end']).strftime('%H:%M')
+    limit = str(row['limit'])
+    if not limit:
+        limit = ''
+    reserved = str(row['reserved'])
+    if not reserved:
+        reserved = ''
+    return {
+        'success': True,
+        'eventTitle': row['title'],
+        'date': date,
+        'startTime': start_time,
+        'endTime': end_time,
+        'limit': limit,
+        'reserved': reserved
     }
