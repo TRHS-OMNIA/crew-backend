@@ -333,6 +333,31 @@ def remove_user(event_id, user_id):
         'success': True
     }
 
+def remove_event(event_id):
+    calendar_api = get_calendar_api()
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'DELETE FROM public.entries WHERE eid = %s',
+            (event_id,)
+        )
+        cur.execute(
+            'DELETE FROM public.qr WHERE eid = %s',
+            (event_id,)
+        )
+        cur.execute(
+            'DELETE FROM public.events WHERE id = %s',
+            (event_id,)
+        )
+        conn.commit()
+    conn.close()
+
+    calendar_api.events().delete(calendarId=CALENDAR_ID, eventId=event_id, sendUpdates='all').execute()
+    
+    return {
+        'success': True
+    }
+
 def _get_today() -> datetime.datetime:
     return datetime.datetime.now().astimezone(PACIFIC_TIME).replace(hour=0, minute=0)
 

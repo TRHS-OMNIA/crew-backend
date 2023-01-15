@@ -22,7 +22,8 @@ from events import (
     get_single_user_event_data,
     remove_user,
     _get_event_for_edit,
-    edit_event
+    edit_event,
+    remove_event
     )
 
 from qr import (
@@ -161,3 +162,9 @@ def get_editable_event(event_id):
 def edit_existing_event(event_id):
     payload = request.json
     return edit_event(event_id, payload)
+
+@app.get('/event/<event_id>/delete')
+@authorization_required
+@admin_only
+def delete_event(event_id):
+    return remove_event(event_id)
