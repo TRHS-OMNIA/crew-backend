@@ -11,7 +11,7 @@ from google.oauth2 import id_token
 from google.auth.transport import requests
 
 def get_exp_ts():
-    return int((datetime.datetime.now() + datetime.timedelta(seconds=60040)).timestamp() * 1000)
+    return int((datetime.datetime.now() + datetime.timedelta(seconds=302400)).timestamp() * 1000)
 
 def gauth_login(token):
     try:

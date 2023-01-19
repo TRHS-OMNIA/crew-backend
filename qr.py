@@ -60,8 +60,26 @@ def get_data_from_qrid(qrid):
             (qrid, )
         )
         data = cur.fetchone()
+        if data:
+            cur.execute(
+                'UPDATE public.qr SET scanned = %s WHERE qrid = %s',
+                (True, qrid)
+            )
+            conn.commit()
     conn.close()
     if data:
+        if data['exp'].astimezone(PACIFIC_TIME) < datetime.datetime.now().astimezone(PACIFIC_TIME):
+            return {
+                'success': False,
+                'error': 'Expired QR Code',
+                'friendly': 'The check in/out code is invalid because it has expired.'
+            }
+        if data['scanned']:
+            return {
+                'success': False,
+                'error': 'Duplicate QR Code',
+                'friendly': 'The check in/out code is invalid because it has already been scanned.'
+            }
         return {
             'success': True,
             'data': data
@@ -72,3 +90,22 @@ def get_data_from_qrid(qrid):
             'error': 'Invalid QR',
             'friendly': 'The check in/out code is invalid.'
         }
+
+def is_qrid_scanned(qrid, user_id):
+    conn = get_db_connection()
+    with conn.cursor() as cur:
+        cur.execute(
+            'SELECT scanned FROM public.qr WHERE qrid = %s AND uid = %s',
+            (qrid, user_id)
+        )
+        data = cur.fetchone()
+    conn.close()
+    if data:
+        return {
+            'success': True,
+            'scanned': data['scanned']
+        }
+    return {
+        'success': True,
+        'scanned': False
+    }

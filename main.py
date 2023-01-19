@@ -28,7 +28,8 @@ from events import (
 
 from qr import (
     create_qr,
-    get_data_from_qrid
+    get_data_from_qrid,
+    is_qrid_scanned
 )
 
 from users import (
@@ -181,3 +182,8 @@ def list_all_users():
 def admin_add_user_to_event(event_id, user_id):
     user = {'id': user_id}
     return join_event(event_id, user, admin=True)
+
+@app.get('/qr/<qrid>')
+@authorization_required
+def check_qrid_scan_state(qrid):
+    return is_qrid_scanned(qrid, g.user['id'])
