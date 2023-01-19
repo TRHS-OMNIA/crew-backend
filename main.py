@@ -31,9 +31,9 @@ from qr import (
     get_data_from_qrid
 )
 
-from dotenv import load_dotenv
-
-load_dotenv()
+from users import (
+    get_all_users
+)
 
 app = Flask(__name__)
 CORS(app, origins='*', send_wildcard=False)
@@ -168,3 +168,16 @@ def edit_existing_event(event_id):
 @admin_only
 def delete_event(event_id):
     return remove_event(event_id)
+
+@app.get('/users')
+@authorization_required
+@admin_only
+def list_all_users():
+    return get_all_users()
+
+@app.get('/event/<event_id>/add/<user_id>')
+@authorization_required
+@admin_only
+def admin_add_user_to_event(event_id, user_id):
+    user = {'id': user_id}
+    return join_event(event_id, user, admin=True)

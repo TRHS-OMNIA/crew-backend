@@ -209,12 +209,18 @@ def _remove_email_from_gcal(event_id, email):
         event['attendees'] = replacement
     calendar_api.events().update(calendarId=CALENDAR_ID, eventId=event_id, body=event, sendUpdates='all').execute()
 
-def join_event(event_id, user):
+def join_event(event_id, user, admin=False):
     row = get_event_row(event_id)
     entries = get_limit_entries(event_id)
     event_limits = get_event_limits(row, entries)
     user_event_limits = get_user_event_limits(event_limits, entries, user)
-    if user_event_limits['user_available']:
+    if user_event_limits['user_available'] or admin:
+        if admin and not user_event_limits['user_available'] and user_event_limits['user_justification'] == 'Already Joined Event':
+            return {
+                'success': False,
+                'error': 'Failed to Add to Event',
+                'friendly': 'User is already a member of the event.'
+            }
         conn = get_db_connection()
         with conn.cursor() as cur:
             cur.execute(
