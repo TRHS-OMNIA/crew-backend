@@ -213,6 +213,8 @@ def join_event(event_id, user, admin=False):
     row = get_event_row(event_id)
     entries = get_limit_entries(event_id)
     event_limits = get_event_limits(row, entries)
+    if admin:
+        user['period'] = 10
     user_event_limits = get_user_event_limits(event_limits, entries, user)
     if user_event_limits['user_available'] or admin:
         if admin and not user_event_limits['user_available'] and user_event_limits['user_justification'] == 'Already Joined Event':
