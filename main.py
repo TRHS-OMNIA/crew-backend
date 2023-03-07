@@ -127,8 +127,9 @@ def delete_user_from_event(event_id, user_id):
     return remove_user(event_id, user_id)
 
 @app.get('/events')
+@inject_user
 def get_event_lists():
-    return list_events()
+    return list_events(user=g.user)
 
 @app.get('/events/user')
 @authorization_required

@@ -131,7 +131,9 @@ def get_event_data(row):
         'time': f'{get_str_time(start)} - {get_str_time(end)}',
         'month': start.strftime('%b'),
         'day': get_str_day(start),
-        'weekday': start.strftime('%A')
+        'weekday': start.strftime('%A'),
+        'limit': row['limit'],
+        'reserved': row['reserved']
     }
 
 def get_limit_entries(event_id):
@@ -423,11 +425,26 @@ def _get_user_event_data(row):
     data['start'] = row['start']
     return data
 
-def upcoming():
+def upcoming(user=None):
     rows = _get_upcoming_events()
     ret = []
+    ids = []
     for row in rows:
         ret.append(_get_id_event_data(row))
+        ids.append(ret[-1]['id'])
+    if user:
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute('SELECT uid, period, eid FROM public.entries JOIN public.users ON uid = id WHERE eid = ANY(%s)', (ids, ))
+            entries = cur.fetchall()
+        conn.close()
+        for i in range(len(ret)):
+            eid = ret[i]['id']
+            event_entries = [e for e in entries if e['eid'] == eid]
+            event_limits = get_event_limits(ret[i], event_entries)
+            user_event_limts = get_user_event_limits(event_limits, event_entries, user)
+            ret[i]['eventLimits'] = event_limits
+            ret[i]['userEventLimits'] = user_event_limts
     return ret
 
 def previous():
@@ -437,19 +454,34 @@ def previous():
         ret.append(_get_id_event_data(row))
     return ret
 
-def today():
+def today(user=None):
     rows = _get_today_events()
     ret = []
+    ids = []
     for row in rows:
         ret.append(_get_id_event_data(row))
+        ids.append(ret[-1]['id'])
+    if user:
+        conn = get_db_connection()
+        with conn.cursor() as cur:
+            cur.execute('SELECT uid, period, eid FROM public.entries JOIN public.users ON uid = id WHERE eid = ANY(%s)', (ids, ))
+            entries = cur.fetchall()
+        conn.close()
+        for i in range(len(ret)):
+            eid = ret[i]['id']
+            event_entries = [e for e in entries if e['eid'] == eid]
+            event_limits = get_event_limits(ret[i], event_entries)
+            user_event_limts = get_user_event_limits(event_limits, event_entries, user)
+            ret[i]['eventLimits'] = event_limits
+            ret[i]['userEventLimits'] = user_event_limts
     return ret
 
-def list_events():
+def list_events(user=None):
     return {
         'success': True,
-        'upcoming': upcoming(),
+        'upcoming': upcoming(user=user),
         'previous': previous(),
-        'today': today()
+        'today': today(user=user)
     }
 
 def _get_upcoming_user_events(user_id):
