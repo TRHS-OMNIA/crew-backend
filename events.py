@@ -489,7 +489,7 @@ def _get_upcoming_user_events(user_id):
     conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute(
-            'SELECT eid, title, start, "end", position, check_in, check_out FROM public.entries JOIN public.events ON eid = id WHERE uid = %s AND start > %s ORDER BY start ASC',
+            'SELECT eid, title, start, "end", position, check_in, check_out, "limit", "reserved" FROM public.entries JOIN public.events ON eid = id WHERE uid = %s AND start > %s ORDER BY start ASC',
             (user_id, tomorrow)
         )
         events = cur.fetchall()
@@ -501,7 +501,7 @@ def _get_previous_user_events(user_id):
     conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute(
-            'SELECT eid, title, start, "end", position, check_in, check_out FROM public.entries JOIN public.events ON eid = id WHERE uid = %s AND start < %s ORDER BY start DESC',
+            'SELECT eid, title, start, "end", position, check_in, check_out, "limit", "reserved" FROM public.entries JOIN public.events ON eid = id WHERE uid = %s AND start < %s ORDER BY start DESC',
             (user_id, today)
         )
         events = cur.fetchall()
@@ -514,7 +514,7 @@ def _get_today_user_events(user_id):
     conn = get_db_connection()
     with conn.cursor() as cur:
         cur.execute(
-            'SELECT eid, title, start, "end", position, check_in, check_out FROM public.entries JOIN public.events ON eid = id WHERE uid = %s AND start > %s AND start < %s ORDER BY start ASC',
+            'SELECT eid, title, start, "end", position, check_in, check_out, "limit", "reserved" FROM public.entries JOIN public.events ON eid = id WHERE uid = %s AND start > %s AND start < %s ORDER BY start ASC',
             (user_id, today, tomorrow)
         )
         events = cur.fetchall()
