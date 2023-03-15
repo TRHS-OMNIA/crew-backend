@@ -132,8 +132,8 @@ def get_event_data(row):
         'month': start.strftime('%b'),
         'day': get_str_day(start),
         'weekday': start.strftime('%A'),
-        'limit': row['limit'],
-        'reserved': row['reserved']
+        'limit': row.get('limit', 0),
+        'reserved': row.get('reserved', 0)
     }
 
 def get_limit_entries(event_id):
