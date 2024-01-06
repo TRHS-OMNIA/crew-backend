@@ -136,6 +136,12 @@ def get_event_lists():
 def get_user_events():
     return list_user_events(g.user['id'])
 
+@app.get('/events/user/<user_id>')
+@authorization_required
+@admin_only
+def get_users_events(user_id):
+    return list_user_events(user_id)
+
 @app.get('/event/<event_id>/user')
 @authorization_required
 def get_single_event_user(event_id):
