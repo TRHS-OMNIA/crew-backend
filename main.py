@@ -194,3 +194,6 @@ def admin_add_user_to_event(event_id, user_id):
 @authorization_required
 def check_qrid_scan_state(qrid):
     return is_qrid_scanned(qrid, g.user['id'])
+
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=6512)
